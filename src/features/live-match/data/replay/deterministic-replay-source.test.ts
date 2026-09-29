@@ -83,12 +83,14 @@ describe('DeterministicReplaySource', () => {
       'event-002',
     ]);
 
-    expect(source.getSnapshot()).toEqual({
-      status: 'completed',
-      speed: 1,
-      nextEventIndex: 2,
-      totalEvents: 2,
-    });
+    expect(source.getSnapshot()).toEqual(
+      expect.objectContaining({
+        status: 'completed',
+        speed: 1,
+        nextEventIndex: 2,
+        totalEvents: 2,
+      }),
+    );
   });
 
   it('pauses and resumes with the remaining delay', () => {
@@ -135,12 +137,16 @@ describe('DeterministicReplaySource', () => {
 
     source.reset();
 
-    expect(source.getSnapshot()).toEqual({
-      status: 'idle',
-      speed: 1,
-      nextEventIndex: 0,
-      totalEvents: 2,
-    });
+    expect(source.getSnapshot()).toEqual(
+      expect.objectContaining({
+        status: 'idle',
+        connectionStatus: 'current',
+        speed: 1,
+        nextEventIndex: 0,
+        totalEvents: 2,
+        bufferedEventCount: 0,
+      }),
+    );
 
     clock.advanceBy(10_000);
 
@@ -197,7 +203,14 @@ describe('DeterministicReplaySource', () => {
     clock.advanceBy(1_000);
     source.pause();
 
-    expect(snapshots).toEqual([
+    expect(
+      snapshots.map(({ status, speed, nextEventIndex, totalEvents }) => ({
+        status,
+        speed,
+        nextEventIndex,
+        totalEvents,
+      })),
+    ).toEqual([
       {
         status: 'playing',
         speed: 1,
@@ -222,6 +235,88 @@ describe('DeterministicReplaySource', () => {
     source.setSpeed(2);
 
     expect(snapshots).toHaveLength(3);
+  });
+
+  it('marks a delayed event stale until it is delivered', () => {
+    const { clock, source, receivedEvents } = createTestContext();
+
+    source.play();
+    source.delayNextEvent();
+
+    expect(source.getSnapshot().connectionStatus).toBe('delayed');
+
+    clock.advanceBy(3_999);
+    expect(receivedEvents).toEqual([]);
+
+    clock.advanceBy(1);
+    expect(receivedEvents.map((event) => event.id)).toEqual(['event-001']);
+    expect(source.getSnapshot().connectionStatus).toBe('current');
+  });
+
+  it('buffers events while disconnected and catches up on reconnect', () => {
+    const { clock, source, receivedEvents } = createTestContext();
+
+    source.play();
+    source.disconnect();
+    clock.advanceBy(3_000);
+
+    expect(receivedEvents).toEqual([]);
+    expect(source.getSnapshot()).toEqual(
+      expect.objectContaining({
+        status: 'completed',
+        connectionStatus: 'disconnected',
+        bufferedEventCount: 2,
+      }),
+    );
+
+    source.reconnect();
+
+    expect(source.getSnapshot().connectionStatus).toBe('reconnecting');
+
+    clock.advanceBy(799);
+    expect(receivedEvents).toEqual([]);
+
+    clock.advanceBy(1);
+    expect(receivedEvents.map((event) => event.id)).toEqual([
+      'event-001',
+      'event-002',
+    ]);
+    expect(source.getSnapshot()).toEqual(
+      expect.objectContaining({
+        connectionStatus: 'current',
+        bufferedEventCount: 0,
+      }),
+    );
+  });
+
+  it('can emit a duplicate without advancing replay progress', () => {
+    const { clock, source, receivedEvents } = createTestContext();
+
+    source.play();
+    clock.advanceBy(1_000);
+    source.emitDuplicate();
+
+    expect(receivedEvents.map((event) => event.id)).toEqual([
+      'event-001',
+      'event-001',
+    ]);
+    expect(source.getSnapshot().nextEventIndex).toBe(1);
+  });
+
+  it('can emit the next pair out of order', () => {
+    const { source, receivedEvents } = createTestContext();
+
+    source.play();
+    source.emitNextPairOutOfOrder();
+
+    expect(receivedEvents.map((event) => event.sequence)).toEqual([2, 1]);
+    expect(source.getSnapshot()).toEqual(
+      expect.objectContaining({
+        status: 'completed',
+        nextEventIndex: 2,
+        canEmitOutOfOrder: false,
+      }),
+    );
   });
 
   it('rejects duplicate event IDs', () => {

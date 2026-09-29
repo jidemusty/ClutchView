@@ -82,11 +82,13 @@ describe('deterministic replay integration', () => {
       }),
     ]);
 
-    expect(source.getSnapshot()).toEqual({
-      status: 'completed',
-      speed: 1,
-      nextEventIndex: 4,
-      totalEvents: 4,
-    });
+    expect(source.getSnapshot()).toEqual(
+      expect.objectContaining({
+        status: 'completed',
+        speed: 1,
+        nextEventIndex: 4,
+        totalEvents: 4,
+      }),
+    );
   });
 });

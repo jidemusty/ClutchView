@@ -6,6 +6,7 @@ import type {
 import type { ReplayClock, ScheduledTask } from './replay-clock';
 import { systemReplayClock } from './replay-clock';
 import type {
+  ConnectionStatus,
   ReplayController,
   ReplaySnapshot,
   ReplaySnapshotListener,
@@ -13,6 +14,9 @@ import type {
   ReplayStatus,
 } from './replay-controller';
 import type { TimedMatchEvent } from './timed-match-event';
+
+const simulatedDelayMs = 3_000;
+const reconnectDelayMs = 800;
 
 interface DeterministicReplaySourceOptions {
   readonly matchId: string;
@@ -32,11 +36,15 @@ export class DeterministicReplaySource
   private readonly snapshotListeners = new Set<ReplaySnapshotListener>();
 
   private status: ReplayStatus = 'idle';
+  private connectionStatus: ConnectionStatus = 'current';
   private speed: ReplaySpeed;
   private nextEventIndex = 0;
   private remainingSourceDelayMs: number;
+  private readonly bufferedEvents: TimedMatchEvent['event'][] = [];
+  private lastEmittedEvent: TimedMatchEvent['event'] | undefined;
 
   private scheduledTask: ScheduledTask | undefined;
+  private reconnectTask: ScheduledTask | undefined;
   private scheduledAtMs: number | undefined;
   private scheduledSpeed: ReplaySpeed | undefined;
 
@@ -80,9 +88,15 @@ export class DeterministicReplaySource
   getSnapshot(): ReplaySnapshot {
     return {
       status: this.status,
+      connectionStatus: this.connectionStatus,
       speed: this.speed,
       nextEventIndex: this.nextEventIndex,
       totalEvents: this.events.length,
+      bufferedEventCount: this.bufferedEvents.length,
+      canEmitDuplicate: this.lastEmittedEvent !== undefined,
+      canEmitOutOfOrder:
+        (this.status === 'playing' || this.status === 'paused') &&
+        this.nextEventIndex + 1 < this.events.length,
     };
   }
 
@@ -116,10 +130,14 @@ export class DeterministicReplaySource
 
   reset(): void {
     this.cancelScheduledTask();
+    this.cancelReconnectTask();
 
     this.status = 'idle';
+    this.connectionStatus = 'current';
     this.nextEventIndex = 0;
     this.remainingSourceDelayMs = this.events[0]?.delayMs ?? 0;
+    this.bufferedEvents.length = 0;
+    this.lastEmittedEvent = undefined;
 
     this.notifySnapshotListeners();
   }
@@ -140,6 +158,104 @@ export class DeterministicReplaySource
     }
 
     this.speed = speed;
+    this.notifySnapshotListeners();
+  }
+
+  delayNextEvent(): void {
+    if (
+      (this.status !== 'playing' && this.status !== 'paused') ||
+      this.connectionStatus !== 'current'
+    ) {
+      return;
+    }
+
+    if (this.status === 'playing') {
+      this.captureRemainingSourceDelay();
+      this.cancelScheduledTask();
+    }
+
+    this.remainingSourceDelayMs += simulatedDelayMs;
+    this.connectionStatus = 'delayed';
+
+    if (this.status === 'playing') {
+      this.scheduleNextEvent();
+    }
+
+    this.notifySnapshotListeners();
+  }
+
+  disconnect(): void {
+    if (
+      this.status === 'idle' ||
+      (this.status === 'completed' && this.connectionStatus === 'current') ||
+      this.connectionStatus === 'disconnected' ||
+      this.connectionStatus === 'reconnecting'
+    ) {
+      return;
+    }
+
+    this.connectionStatus = 'disconnected';
+    this.notifySnapshotListeners();
+  }
+
+  reconnect(): void {
+    if (this.connectionStatus !== 'disconnected') {
+      return;
+    }
+
+    this.connectionStatus = 'reconnecting';
+    this.notifySnapshotListeners();
+
+    this.reconnectTask = this.clock.schedule(() => {
+      this.reconnectTask = undefined;
+
+      for (const event of this.bufferedEvents.splice(0)) {
+        this.deliverEvent(event);
+      }
+
+      this.connectionStatus = 'current';
+      this.notifySnapshotListeners();
+    }, reconnectDelayMs);
+  }
+
+  emitDuplicate(): void {
+    if (this.lastEmittedEvent === undefined) {
+      return;
+    }
+
+    this.publishEvent(this.lastEmittedEvent);
+    this.notifySnapshotListeners();
+  }
+
+  emitNextPairOutOfOrder(): void {
+    if (this.status !== 'playing' && this.status !== 'paused') {
+      return;
+    }
+
+    const firstEvent = this.events[this.nextEventIndex];
+    const secondEvent = this.events[this.nextEventIndex + 1];
+
+    if (firstEvent === undefined || secondEvent === undefined) {
+      return;
+    }
+
+    if (this.status === 'playing') {
+      this.cancelScheduledTask();
+    }
+
+    this.nextEventIndex += 2;
+    this.remainingSourceDelayMs =
+      this.events[this.nextEventIndex]?.delayMs ?? 0;
+
+    this.publishEvent(secondEvent.event);
+    this.publishEvent(firstEvent.event);
+
+    if (this.nextEventIndex >= this.events.length) {
+      this.status = 'completed';
+    } else if (this.status === 'playing') {
+      this.scheduleNextEvent();
+    }
+
     this.notifySnapshotListeners();
   }
 
@@ -192,8 +308,10 @@ export class DeterministicReplaySource
       this.status = 'completed';
     }
 
-    for (const listener of this.eventListeners) {
-      listener(timedEvent.event);
+    this.publishEvent(timedEvent.event);
+
+    if (this.connectionStatus === 'delayed') {
+      this.connectionStatus = 'current';
     }
 
     if (this.status === 'completed') {
@@ -233,6 +351,31 @@ export class DeterministicReplaySource
     this.scheduledTask = undefined;
     this.scheduledAtMs = undefined;
     this.scheduledSpeed = undefined;
+  }
+
+  private cancelReconnectTask(): void {
+    this.reconnectTask?.cancel();
+    this.reconnectTask = undefined;
+  }
+
+  private publishEvent(event: TimedMatchEvent['event']): void {
+    this.lastEmittedEvent = event;
+
+    if (
+      this.connectionStatus === 'disconnected' ||
+      this.connectionStatus === 'reconnecting'
+    ) {
+      this.bufferedEvents.push(event);
+      return;
+    }
+
+    this.deliverEvent(event);
+  }
+
+  private deliverEvent(event: TimedMatchEvent['event']): void {
+    for (const listener of this.eventListeners) {
+      listener(event);
+    }
   }
 
   private notifySnapshotListeners(): void {

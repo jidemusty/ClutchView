@@ -6,10 +6,21 @@ import { FreshnessIndicator } from './components/freshness-indicator';
 import { MatchHeader } from './components/match-header';
 import { ProjectionSection } from './components/projection-section';
 import { ReplayControls } from './components/replay-controls';
+import { ReplayFaultControls } from './components/replay-fault-controls';
 import { useLiveMatchReplay } from './hooks/use-live-match-replay';
 
 export function LiveMatchScreen() {
-  const { screenModel, play, pause, reset, cycleSpeed } = useLiveMatchReplay();
+  const {
+    screenModel,
+    play,
+    pause,
+    reset,
+    cycleSpeed,
+    delayNextEvent,
+    toggleConnection,
+    emitDuplicate,
+    emitOutOfOrder,
+  } = useLiveMatchReplay();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -31,6 +42,14 @@ export function LiveMatchScreen() {
           onPause={pause}
           onReset={reset}
           onCycleSpeed={cycleSpeed}
+        />
+
+        <ReplayFaultControls
+          replay={screenModel.replay}
+          onDelayNextEvent={delayNextEvent}
+          onToggleConnection={toggleConnection}
+          onEmitDuplicate={emitDuplicate}
+          onEmitOutOfOrder={emitOutOfOrder}
         />
       </ScrollView>
     </SafeAreaView>

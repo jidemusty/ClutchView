@@ -1,6 +1,16 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
+import type { LiveMatchScreenModel } from '../live-match-screen-model';
 import { ReplayControls } from './replay-controls';
+
+const baseReplay: LiveMatchScreenModel['replay'] = {
+  state: 'idle',
+  connectionStatus: 'current',
+  speed: 1,
+  bufferedEventCount: 0,
+  canEmitDuplicate: false,
+  canEmitOutOfOrder: false,
+};
 
 describe('ReplayControls', () => {
   it('starts, resets, and changes the replay speed', async () => {
@@ -11,7 +21,7 @@ describe('ReplayControls', () => {
 
     const { getByRole } = await render(
       <ReplayControls
-        replay={{ state: 'idle', speed: 1 }}
+        replay={baseReplay}
         onPlay={onPlay}
         onPause={onPause}
         onReset={onReset}
@@ -38,7 +48,7 @@ describe('ReplayControls', () => {
 
     const { getByRole } = await render(
       <ReplayControls
-        replay={{ state: 'playing', speed: 2 }}
+        replay={{ ...baseReplay, state: 'playing', speed: 2 }}
         onPlay={jest.fn()}
         onPause={onPause}
         onReset={jest.fn()}
@@ -56,7 +66,7 @@ describe('ReplayControls', () => {
 
     const { getByRole } = await render(
       <ReplayControls
-        replay={{ state: 'completed', speed: 4 }}
+        replay={{ ...baseReplay, state: 'completed', speed: 4 }}
         onPlay={onPlay}
         onPause={jest.fn()}
         onReset={jest.fn()}

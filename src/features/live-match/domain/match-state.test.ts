@@ -82,7 +82,7 @@ describe('applyMatchEvent', () => {
     const event: GoalEvent = {
       id: 'event-002',
       matchId: 'match-001',
-      sequence: 2,
+      sequence: 1,
       occurredAt: '2026-09-28T20:20:00.000Z',
       minute: 20,
       type: 'goal',
@@ -118,7 +118,7 @@ describe('applyMatchEvent', () => {
     const event: ShotEvent = {
       id: 'event-duplicate',
       matchId: 'match-001',
-      sequence: 3,
+      sequence: 1,
       occurredAt: '2026-09-28T20:30:00.000Z',
       minute: 30,
       type: 'shot',
@@ -186,5 +186,59 @@ describe('applyMatchEvent', () => {
     expect(() => applyMatchEvent(state, event)).toThrow(
       'Cannot apply event for match "match-002" to match "match-001"',
     );
+  });
+
+  it('buffers an out-of-order event until the missing sequence arrives', () => {
+    const firstEvent: ShotEvent = {
+      id: 'event-001',
+      matchId: 'match-001',
+      sequence: 1,
+      occurredAt: '2026-09-28T20:10:00.000Z',
+      minute: 10,
+      type: 'shot',
+      playerId: 'player-scorer',
+      outcome: 'blocked',
+    };
+
+    const secondEvent: GoalEvent = {
+      id: 'event-002',
+      matchId: 'match-001',
+      sequence: 2,
+      occurredAt: '2026-09-28T20:20:00.000Z',
+      minute: 20,
+      type: 'goal',
+      playerId: 'player-scorer',
+    };
+
+    const stateWithGap = applyMatchEvent(createInitialState(), secondEvent);
+
+    expect(stateWithGap.acceptedEvents).toEqual([]);
+    expect(stateWithGap.pendingEvents).toEqual([secondEvent]);
+    expect(stateWithGap.lastAcceptedSequence).toBe(0);
+
+    const reconciledState = applyMatchEvent(stateWithGap, firstEvent);
+
+    expect(
+      reconciledState.acceptedEvents.map((event) => event.sequence),
+    ).toEqual([1, 2]);
+    expect(reconciledState.pendingEvents).toEqual([]);
+    expect(reconciledState.lastAcceptedSequence).toBe(2);
+    expect(reconciledState.projections[0].current).toBe(2);
+  });
+
+  it('ignores a duplicate event while it is buffered', () => {
+    const futureEvent: GoalEvent = {
+      id: 'event-002',
+      matchId: 'match-001',
+      sequence: 2,
+      occurredAt: '2026-09-28T20:20:00.000Z',
+      minute: 20,
+      type: 'goal',
+      playerId: 'player-scorer',
+    };
+
+    const stateWithGap = applyMatchEvent(createInitialState(), futureEvent);
+
+    expect(applyMatchEvent(stateWithGap, futureEvent)).toBe(stateWithGap);
   });
 });

@@ -10,9 +10,13 @@ import { presentLiveMatch } from './live-match-presenter';
 
 const idleSnapshot: ReplaySnapshot = {
   status: 'idle',
+  connectionStatus: 'current',
   speed: 1,
   nextEventIndex: 0,
   totalEvents: replayEvents.length,
+  bufferedEventCount: 0,
+  canEmitDuplicate: false,
+  canEmitOutOfOrder: false,
 };
 
 describe('presentLiveMatch', () => {
@@ -30,12 +34,17 @@ describe('presentLiveMatch', () => {
     expect(result.freshness).toEqual({
       status: 'Ready',
       detail: 'Replay not started',
+      tone: 'current',
     });
     expect(result.projections.map(({ current }) => current)).toEqual([0, 0, 0]);
     expect(result.timeline).toEqual([]);
     expect(result.replay).toEqual({
       state: 'idle',
+      connectionStatus: 'current',
       speed: 1,
+      bufferedEventCount: 0,
+      canEmitDuplicate: false,
+      canEmitOutOfOrder: false,
     });
   });
 
@@ -50,9 +59,13 @@ describe('presentLiveMatch', () => {
 
     const completedSnapshot: ReplaySnapshot = {
       status: 'completed',
+      connectionStatus: 'current',
       speed: 1,
       nextEventIndex: replayEvents.length,
       totalEvents: replayEvents.length,
+      bufferedEventCount: 0,
+      canEmitDuplicate: true,
+      canEmitOutOfOrder: false,
     };
 
     const result = presentLiveMatch(matchState, completedSnapshot);
@@ -95,6 +108,45 @@ describe('presentLiveMatch', () => {
     expect(result.freshness).toEqual({
       status: 'Complete',
       detail: '4 events replayed',
+      tone: 'current',
+    });
+  });
+
+  it('marks disconnected data as stale and reports buffered events', () => {
+    const matchState = createMatchState({
+      matchId: replayMatchId,
+      projections: liveMatchConfig.projections,
+    });
+
+    const result = presentLiveMatch(matchState, {
+      ...idleSnapshot,
+      connectionStatus: 'disconnected',
+      bufferedEventCount: 2,
+    });
+
+    expect(result.freshness).toEqual({
+      status: 'Disconnected',
+      detail: '2 events waiting',
+      tone: 'offline',
+    });
+  });
+
+  it('surfaces a missing sequence instead of presenting future data', () => {
+    const matchState = applyMatchEvent(
+      createMatchState({
+        matchId: replayMatchId,
+        projections: liveMatchConfig.projections,
+      }),
+      replayEvents[1].event,
+    );
+
+    const result = presentLiveMatch(matchState, idleSnapshot);
+
+    expect(result.timeline).toEqual([]);
+    expect(result.freshness).toEqual({
+      status: 'Delayed',
+      detail: 'Waiting for event 1',
+      tone: 'warning',
     });
   });
 

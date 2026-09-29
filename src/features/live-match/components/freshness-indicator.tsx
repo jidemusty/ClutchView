@@ -1,14 +1,25 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, spacing } from '@/theme/token';
-import type { LiveMatchScreenModel } from '../live-match-screen-model';
+import type {
+  FreshnessTone,
+  LiveMatchScreenModel,
+} from '../live-match-screen-model';
 
 interface FreshnessIndicatorProps {
   readonly freshness: LiveMatchScreenModel['freshness'];
 }
 
+const toneColor: Record<FreshnessTone, string> = {
+  current: colors.accent,
+  neutral: colors.textSecondary,
+  warning: colors.warning,
+  offline: '#F06A73',
+};
+
 export function FreshnessIndicator({ freshness }: FreshnessIndicatorProps) {
   const accessibilityLabel = `${freshness.status}. ${freshness.detail}`;
+  const statusColor = toneColor[freshness.tone];
 
   return (
     <View
@@ -16,8 +27,10 @@ export function FreshnessIndicator({ freshness }: FreshnessIndicatorProps) {
       accessibilityLabel={accessibilityLabel}
       style={styles.container}
     >
-      <View style={styles.statusDot} />
-      <Text style={styles.statusText}>{freshness.status}</Text>
+      <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+      <Text style={[styles.statusText, { color: statusColor }]}>
+        {freshness.status}
+      </Text>
       <Text style={styles.detail}>{freshness.detail}</Text>
     </View>
   );
@@ -33,11 +46,9 @@ const styles = StyleSheet.create({
   statusDot: {
     width: 7,
     height: 7,
-    backgroundColor: colors.accent,
     borderRadius: radius.pill,
   },
   statusText: {
-    color: colors.accent,
     fontSize: 13,
     fontWeight: '800',
   },

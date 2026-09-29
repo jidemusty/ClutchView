@@ -86,11 +86,36 @@ export function useLiveMatchReplay() {
     }
   }, [source]);
 
+  const delayNextEvent = useCallback(() => {
+    source.delayNextEvent();
+  }, [source]);
+
+  const toggleConnection = useCallback(() => {
+    if (source.getSnapshot().connectionStatus === 'disconnected') {
+      source.reconnect();
+      return;
+    }
+
+    source.disconnect();
+  }, [source]);
+
+  const emitDuplicate = useCallback(() => {
+    source.emitDuplicate();
+  }, [source]);
+
+  const emitOutOfOrder = useCallback(() => {
+    source.emitNextPairOutOfOrder();
+  }, [source]);
+
   return {
     screenModel,
     play,
     pause,
     reset,
     cycleSpeed,
+    delayNextEvent,
+    toggleConnection,
+    emitDuplicate,
+    emitOutOfOrder,
   };
 }

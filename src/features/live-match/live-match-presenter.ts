@@ -52,7 +52,7 @@ export function presentLiveMatch(
       period: liveMatchConfig.period,
     },
 
-    freshness: presentFreshness(replaySnapshot),
+    freshness: presentFreshness(matchState, replaySnapshot),
 
     projections: matchState.projections.map((projection) => {
       const player = getPlayer(projection.playerId);
@@ -76,37 +76,82 @@ export function presentLiveMatch(
 
     replay: {
       state: replaySnapshot.status,
+      connectionStatus: replaySnapshot.connectionStatus,
       speed: replaySnapshot.speed,
+      bufferedEventCount: replaySnapshot.bufferedEventCount,
+      canEmitDuplicate: replaySnapshot.canEmitDuplicate,
+      canEmitOutOfOrder: replaySnapshot.canEmitOutOfOrder,
     },
   };
 }
 
 function presentFreshness(
+  matchState: MatchState,
   snapshot: ReplaySnapshot,
 ): LiveMatchScreenModel['freshness'] {
+  if (snapshot.connectionStatus === 'disconnected') {
+    return {
+      status: 'Disconnected',
+      detail:
+        snapshot.bufferedEventCount === 0
+          ? 'Match data may be stale'
+          : `${snapshot.bufferedEventCount} events waiting`,
+      tone: 'offline',
+    };
+  }
+
+  if (snapshot.connectionStatus === 'reconnecting') {
+    return {
+      status: 'Reconnecting',
+      detail:
+        snapshot.bufferedEventCount === 0
+          ? 'Checking for missed events'
+          : `Catching up ${snapshot.bufferedEventCount} events`,
+      tone: 'warning',
+    };
+  }
+
+  if (
+    snapshot.connectionStatus === 'delayed' ||
+    matchState.pendingEvents.length > 0
+  ) {
+    return {
+      status: 'Delayed',
+      detail:
+        matchState.pendingEvents.length > 0
+          ? `Waiting for event ${matchState.lastAcceptedSequence + 1}`
+          : 'Next event intentionally delayed',
+      tone: 'warning',
+    };
+  }
+
   switch (snapshot.status) {
     case 'idle':
       return {
         status: 'Ready',
         detail: 'Replay not started',
+        tone: 'current',
       };
 
     case 'playing':
       return {
         status: 'Replay',
         detail: `Event ${snapshot.nextEventIndex + 1} of ${snapshot.totalEvents}`,
+        tone: 'current',
       };
 
     case 'paused':
       return {
         status: 'Paused',
         detail: `Event ${snapshot.nextEventIndex} of ${snapshot.totalEvents}`,
+        tone: 'neutral',
       };
 
     case 'completed':
       return {
         status: 'Complete',
         detail: `${snapshot.totalEvents} events replayed`,
+        tone: 'current',
       };
   }
 }
