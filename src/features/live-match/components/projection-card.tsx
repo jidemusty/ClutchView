@@ -1,4 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  AccessibilityInfo,
+  Animated,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { colors, radius, spacing } from '@/theme/token';
 import type {
@@ -8,6 +15,7 @@ import type {
 
 interface ProjectionCardProps {
   readonly projection: ProjectionDisplay;
+  readonly criticalMomentId?: string;
 }
 
 interface StatusPresentation {
@@ -34,8 +42,52 @@ const statusPresentation: Record<ProjectionStatus, StatusPresentation> = {
   },
 };
 
-export function ProjectionCard({ projection }: ProjectionCardProps) {
+export function ProjectionCard({
+  projection,
+  criticalMomentId,
+}: ProjectionCardProps) {
   const status = statusPresentation[projection.status];
+  const [scale] = useState(() => new Animated.Value(1));
+
+  useEffect(() => {
+    scale.setValue(1);
+
+    if (criticalMomentId === undefined) {
+      return;
+    }
+
+    let isCancelled = false;
+    let animation: Animated.CompositeAnimation | undefined;
+
+    void AccessibilityInfo.isReduceMotionEnabled().then(
+      (isReducedMotionEnabled) => {
+        if (isCancelled || isReducedMotionEnabled) {
+          return;
+        }
+
+        animation = Animated.sequence([
+          Animated.timing(scale, {
+            toValue: 1.025,
+            duration: 140,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 1,
+            duration: 220,
+            useNativeDriver: true,
+          }),
+        ]);
+
+        animation.start();
+      },
+    );
+
+    return () => {
+      isCancelled = true;
+      animation?.stop();
+      scale.setValue(1);
+    };
+  }, [criticalMomentId, scale]);
 
   const progressRatio =
     projection.target > 0
@@ -45,10 +97,11 @@ export function ProjectionCard({ projection }: ProjectionCardProps) {
   const progressWidth: `${number}%` = `${progressRatio * 100}%`;
 
   return (
-    <View
+    <Animated.View
       style={[
         styles.card,
         projection.status === 'reached' && styles.reachedCard,
+        { transform: [{ scale }] },
       ]}
     >
       <View style={styles.metadata}>
@@ -95,7 +148,7 @@ export function ProjectionCard({ projection }: ProjectionCardProps) {
           ]}
         />
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

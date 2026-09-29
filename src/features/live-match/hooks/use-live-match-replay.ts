@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { notifyGoal } from '../critical-event-feedback';
 import { DeterministicReplaySource } from '../data/replay/deterministic-replay-source';
 import { replayEvents } from '../data/replay/fixtures/north-london-vs-merseyside';
 import type {
@@ -11,6 +12,7 @@ import {
   createMatchState,
   type MatchState,
 } from '../domain/match-state';
+import type { GoalEvent } from '../domain/match-event';
 import { liveMatchConfig } from '../fixtures/live-match-config';
 import { presentLiveMatch } from '../live-match-presenter';
 
@@ -37,6 +39,7 @@ export function useLiveMatchReplay() {
   const [replaySnapshot, setReplaySnapshot] = useState<ReplaySnapshot>(() =>
     source.getSnapshot(),
   );
+  const lastFeedbackSequence = useRef(0);
 
   useEffect(() => {
     const unsubscribeFromEvents = source.subscribe(
@@ -56,6 +59,46 @@ export function useLiveMatchReplay() {
       source.pause();
     };
   }, [source]);
+
+  useEffect(() => {
+    if (matchState.lastAcceptedSequence === 0) {
+      lastFeedbackSequence.current = 0;
+      return;
+    }
+
+    const latestGoal = [...matchState.acceptedEvents]
+      .reverse()
+      .find(
+        (event): event is GoalEvent =>
+          event.type === 'goal' &&
+          event.sequence > lastFeedbackSequence.current,
+      );
+
+    lastFeedbackSequence.current = matchState.lastAcceptedSequence;
+
+    if (latestGoal === undefined) {
+      return;
+    }
+
+    void notifyGoal(latestGoal).catch((error: unknown) => {
+      console.error('Unable to deliver goal feedback', error);
+    });
+  }, [matchState]);
+
+  const criticalMoment = useMemo(() => {
+    const latestGoal = [...matchState.acceptedEvents]
+      .reverse()
+      .find((event): event is GoalEvent => event.type === 'goal');
+
+    if (latestGoal === undefined) {
+      return undefined;
+    }
+
+    return {
+      eventId: latestGoal.id,
+      playerId: latestGoal.playerId,
+    };
+  }, [matchState.acceptedEvents]);
 
   const screenModel = useMemo(
     () => presentLiveMatch(matchState, replaySnapshot),
@@ -109,6 +152,7 @@ export function useLiveMatchReplay() {
 
   return {
     screenModel,
+    criticalMoment,
     play,
     pause,
     reset,
