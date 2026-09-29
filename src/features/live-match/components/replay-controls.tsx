@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, spacing } from '@/theme/token';
 import type {
@@ -8,14 +8,29 @@ import type {
 
 interface ReplayControlsProps {
   readonly replay: LiveMatchScreenModel['replay'];
+  readonly onPlay: () => void;
+  readonly onPause: () => void;
+  readonly onReset: () => void;
+  readonly onCycleSpeed: () => void;
 }
 
 const replayStateLabel: Record<ReplayState, string> = {
+  idle: 'Ready',
   playing: 'Playing',
   paused: 'Paused',
+  completed: 'Complete',
 };
 
-export function ReplayControls({ replay }: ReplayControlsProps) {
+export function ReplayControls({
+  replay,
+  onPlay,
+  onPause,
+  onReset,
+  onCycleSpeed,
+}: ReplayControlsProps) {
+  const isPlaying = replay.state === 'playing';
+  const isCompleted = replay.state === 'completed';
+
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
@@ -29,34 +44,55 @@ export function ReplayControls({ replay }: ReplayControlsProps) {
 
       <View style={styles.panel}>
         <View style={styles.controls}>
-          <View
-            accessible
-            accessibilityLabel="Play replay, unavailable in static preview"
-            style={[styles.control, styles.primaryControl]}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={isPlaying ? 'Pause replay' : 'Play replay'}
+            accessibilityState={{ disabled: isCompleted }}
+            disabled={isCompleted}
+            onPress={isPlaying ? onPause : onPlay}
+            style={({ pressed }) => [
+              styles.control,
+              styles.primaryControl,
+              pressed && styles.pressedControl,
+              isCompleted && styles.disabledControl,
+            ]}
           >
-            <Text style={styles.primaryControlText}>Play</Text>
-          </View>
+            <Text style={styles.primaryControlText}>
+              {isPlaying ? 'Pause' : 'Play'}
+            </Text>
+          </Pressable>
 
-          <View
-            accessible
-            accessibilityLabel="Reset replay, unavailable in static preview"
-            style={[styles.control, styles.secondaryControl]}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Reset replay"
+            onPress={onReset}
+            style={({ pressed }) => [
+              styles.control,
+              styles.secondaryControl,
+              pressed && styles.pressedControl,
+            ]}
           >
             <Text style={styles.secondaryControlText}>Reset</Text>
-          </View>
+          </Pressable>
 
-          <View
-            accessible
-            accessibilityLabel={`Replay speed, ${replay.speed}`}
-            style={[styles.control, styles.speedControl]}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Change replay speed, currently ${replay.speed} times`}
+            accessibilityHint="Cycles between 1, 2, and 4 times speed"
+            onPress={onCycleSpeed}
+            style={({ pressed }) => [
+              styles.control,
+              styles.speedControl,
+              pressed && styles.pressedControl,
+            ]}
           >
             <Text style={styles.speedLabel}>Speed</Text>
-            <Text style={styles.speedValue}>{replay.speed}</Text>
-          </View>
+            <Text style={styles.speedValue}>{replay.speed}x</Text>
+          </Pressable>
         </View>
 
         <Text style={styles.note}>
-          Controls activate when the deterministic replay source is connected.
+          Replay the same match sequence at 1x, 2x, or 4x speed.
         </Text>
       </View>
     </View>
@@ -126,7 +162,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   primaryControlText: {
-    color: colors.textSecondary,
+    color: colors.textPrimary,
     fontSize: 14,
     fontWeight: '800',
   },
@@ -154,6 +190,12 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontSize: 14,
     fontWeight: '800',
+  },
+  pressedControl: {
+    opacity: 0.68,
+  },
+  disabledControl: {
+    opacity: 0.4,
   },
   note: {
     color: colors.textSecondary,

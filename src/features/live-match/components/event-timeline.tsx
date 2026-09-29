@@ -48,6 +48,12 @@ export function EventTimeline({ events }: EventTimelineProps) {
       </View>
 
       <View style={styles.events}>
+        {events.length === 0 && (
+          <Text style={styles.emptyState}>
+            Start the replay to see key match events here.
+          </Text>
+        )}
+
         {events.map((event, index) => {
           const presentation = eventPresentation[event.emphasis];
           const isLast = index === events.length - 1;
@@ -123,6 +129,12 @@ const styles = StyleSheet.create({
   },
   events: {
     gap: 0,
+  },
+  emptyState: {
+    paddingVertical: spacing.md,
+    color: colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
   },
   event: {
     minHeight: 72,

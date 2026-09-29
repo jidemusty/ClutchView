@@ -6,20 +6,32 @@ import { FreshnessIndicator } from './components/freshness-indicator';
 import { MatchHeader } from './components/match-header';
 import { ProjectionSection } from './components/projection-section';
 import { ReplayControls } from './components/replay-controls';
-import { liveMatchFixture } from './fixtures/live-match-fixture';
+import { useLiveMatchReplay } from './hooks/use-live-match-replay';
 
 export function LiveMatchScreen() {
+  const { screenModel, play, pause, reset, cycleSpeed } = useLiveMatchReplay();
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <MatchHeader match={liveMatchFixture.match} />
-        <FreshnessIndicator freshness={liveMatchFixture.freshness} />
-        <ProjectionSection projections={liveMatchFixture.projections} />
-        <EventTimeline events={liveMatchFixture.timeline} />
-        <ReplayControls replay={liveMatchFixture.replay} />
+        <MatchHeader match={screenModel.match} />
+
+        <FreshnessIndicator freshness={screenModel.freshness} />
+
+        <ProjectionSection projections={screenModel.projections} />
+
+        <EventTimeline events={screenModel.timeline} />
+
+        <ReplayControls
+          replay={screenModel.replay}
+          onPlay={play}
+          onPause={pause}
+          onReset={reset}
+          onCycleSpeed={cycleSpeed}
+        />
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,3 +1,5 @@
+import type { PlayerStat } from './domain/player-stat';
+
 export type ProjectionMetric =
   'Shots' | 'Shots on target' | 'Goals' | 'Assists';
 
@@ -6,7 +8,6 @@ export type ProjectionStatus = 'active' | 'approaching' | 'reached';
 export type TimelineEventEmphasis = 'standard' | 'highlight' | 'critical';
 
 export type ReplayState = 'idle' | 'playing' | 'paused' | 'completed';
-
 export interface TeamDisplay {
   readonly name: string;
   readonly abbreviation: string;
@@ -17,6 +18,8 @@ export interface TeamDisplay {
 export interface ProjectionDisplay {
   readonly id: string;
   readonly playerName: string;
+  readonly playerId: string;
+  readonly stat: PlayerStat;
   readonly teamAbbreviation: string;
   readonly metric: ProjectionMetric;
   readonly current: number;
@@ -47,6 +50,6 @@ export interface LiveMatchScreenModel {
   readonly timeline: readonly TimelineEventDisplay[];
   readonly replay: {
     readonly state: ReplayState;
-    readonly speed: string;
+    readonly speed: 1 | 2 | 4;
   };
 }
