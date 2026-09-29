@@ -5,7 +5,7 @@ import { EventTimeline } from './components/event-timeline';
 import { FreshnessIndicator } from './components/freshness-indicator';
 import { MatchHeader } from './components/match-header';
 import { ProjectionSection } from './components/projection-section';
-import { ReplayControls } from './components/replay-control';
+import { ReplayControls } from './components/replay-controls';
 import { liveMatchFixture } from './fixtures/live-match-fixture';
 
 export function LiveMatchScreen() {
