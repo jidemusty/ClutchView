@@ -3,6 +3,7 @@ import {
   replayMatchId,
 } from './data/replay/fixtures/north-london-vs-merseyside';
 import type { ReplaySnapshot } from './data/replay/replay-controller';
+import type { MatchEvent } from './domain/match-event';
 import { applyMatchEvent, createMatchState } from './domain/match-state';
 import { liveMatchConfig } from './fixtures/live-match-config';
 import { presentLiveMatch } from './live-match-presenter';
@@ -34,7 +35,7 @@ describe('presentLiveMatch', () => {
     expect(result.timeline).toEqual([]);
     expect(result.replay).toEqual({
       state: 'idle',
-      speed: '1x',
+      speed: 1,
     });
   });
 
@@ -95,5 +96,44 @@ describe('presentLiveMatch', () => {
       status: 'Complete',
       detail: '4 events replayed',
     });
+  });
+
+  it('keeps the goal before its assist when presenting newest events', () => {
+    const matchState = createMatchState({
+      matchId: replayMatchId,
+      projections: liveMatchConfig.projections,
+    });
+
+    const goalWithAssist: MatchEvent = {
+      id: 'event-goal-with-assist',
+      matchId: replayMatchId,
+      sequence: 1,
+      occurredAt: '2026-09-28T20:57:00.000Z',
+      minute: 57,
+      type: 'goal',
+      playerId: 'player-marcus-bennett',
+      assistedByPlayerId: 'player-christopher-montgomery-wells',
+    };
+
+    const result = presentLiveMatch(
+      applyMatchEvent(matchState, goalWithAssist),
+      idleSnapshot,
+    );
+
+    expect(
+      result.timeline.map(({ playerName, description }) => ({
+        playerName,
+        description,
+      })),
+    ).toEqual([
+      {
+        playerName: 'Marcus Bennett',
+        description: 'Goal',
+      },
+      {
+        playerName: 'Christopher Montgomery-Wells',
+        description: 'Assist',
+      },
+    ]);
   });
 });

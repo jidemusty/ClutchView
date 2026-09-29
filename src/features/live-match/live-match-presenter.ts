@@ -59,6 +59,8 @@ export function presentLiveMatch(
 
       return {
         id: projection.id,
+        playerId: projection.playerId,
+        stat: projection.stat,
         playerName: player.name,
         teamAbbreviation: player.teamAbbreviation,
         metric: metricLabel[projection.stat],
@@ -68,11 +70,13 @@ export function presentLiveMatch(
       };
     }),
 
-    timeline: matchState.acceptedEvents.flatMap(presentTimelineEvent).reverse(),
+    timeline: [...matchState.acceptedEvents]
+      .reverse()
+      .flatMap(presentTimelineEvent),
 
     replay: {
       state: replaySnapshot.status,
-      speed: `${replaySnapshot.speed}x`,
+      speed: replaySnapshot.speed,
     },
   };
 }
