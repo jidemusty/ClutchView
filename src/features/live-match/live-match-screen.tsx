@@ -12,6 +12,7 @@ import { useLiveMatchReplay } from './hooks/use-live-match-replay';
 export function LiveMatchScreen() {
   const {
     screenModel,
+    criticalMoment,
     play,
     pause,
     reset,
@@ -32,7 +33,10 @@ export function LiveMatchScreen() {
 
         <FreshnessIndicator freshness={screenModel.freshness} />
 
-        <ProjectionSection projections={screenModel.projections} />
+        <ProjectionSection
+          projections={screenModel.projections}
+          criticalMoment={criticalMoment}
+        />
 
         <EventTimeline events={screenModel.timeline} />
 

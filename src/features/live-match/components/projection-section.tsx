@@ -6,12 +6,19 @@ import { ProjectionCard } from './projection-card';
 
 interface ProjectionSectionProps {
   readonly projections: LiveMatchScreenModel['projections'];
+  readonly criticalMoment?: {
+    readonly eventId: string;
+    readonly playerId: string;
+  };
 }
 
 const cardWidth = 280;
 const cardGap = spacing.lg;
 
-export function ProjectionSection({ projections }: ProjectionSectionProps) {
+export function ProjectionSection({
+  projections,
+  criticalMoment,
+}: ProjectionSectionProps) {
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
@@ -32,7 +39,15 @@ export function ProjectionSection({ projections }: ProjectionSectionProps) {
         snapToInterval={cardWidth + cardGap}
       >
         {projections.map((projection) => (
-          <ProjectionCard key={projection.id} projection={projection} />
+          <ProjectionCard
+            criticalMomentId={
+              criticalMoment?.playerId === projection.playerId
+                ? criticalMoment.eventId
+                : undefined
+            }
+            key={projection.id}
+            projection={projection}
+          />
         ))}
       </ScrollView>
     </View>
