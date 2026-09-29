@@ -20,12 +20,12 @@ const eventPresentation: Record<TimelineEventEmphasis, EventPresentation> = {
   standard: {
     markerColor: colors.textSecondary,
     descriptionColor: colors.textSecondary,
-    backgroundColor: colors.surface,
+    backgroundColor: 'transparent',
   },
   highlight: {
     markerColor: colors.warning,
     descriptionColor: colors.textPrimary,
-    backgroundColor: colors.surface,
+    backgroundColor: 'transparent',
   },
   critical: {
     markerColor: colors.accent,
@@ -38,12 +38,13 @@ export function EventTimeline({ events }: EventTimelineProps) {
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
-        <View>
-          <Text style={styles.eyebrow}>Match activity</Text>
-          <Text style={styles.title}>Recent moments</Text>
-        </View>
-
-        <Text style={styles.count}>{events.length} events</Text>
+        <Text style={styles.title}>Recent moments</Text>
+        <Text
+          accessibilityLabel={`${events.length} events`}
+          style={styles.count}
+        >
+          {events.length}
+        </Text>
       </View>
 
       <View style={styles.events}>
@@ -59,6 +60,8 @@ export function EventTimeline({ events }: EventTimelineProps) {
               style={[
                 styles.event,
                 { backgroundColor: presentation.backgroundColor },
+                event.emphasis === 'critical' && styles.criticalEvent,
+                isLast && styles.lastEvent,
               ]}
             >
               <View style={styles.timeline}>
@@ -106,36 +109,29 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.md,
   },
-  eyebrow: {
-    color: colors.accent,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
   title: {
+    flex: 1,
     color: colors.textPrimary,
     fontSize: 22,
     fontWeight: '800',
   },
   count: {
     color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
   events: {
-    overflow: 'hidden',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
+    gap: 0,
   },
   event: {
     minHeight: 72,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.sm,
     paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
   timeline: {
     width: 12,
@@ -175,5 +171,12 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  criticalEvent: {
+    marginBottom: spacing.xs,
+    borderRadius: radius.control,
+  },
+  lastEvent: {
+    borderBottomWidth: 0,
   },
 });

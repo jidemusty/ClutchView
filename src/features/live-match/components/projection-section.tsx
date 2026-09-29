@@ -15,12 +15,13 @@ export function ProjectionSection({ projections }: ProjectionSectionProps) {
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
-        <View style={styles.headingCopy}>
-          <Text style={styles.eyebrow}>Live card</Text>
-          <Text style={styles.title}>Players to watch</Text>
-        </View>
-
-        <Text style={styles.count}>{projections.length} projections</Text>
+        <Text style={styles.title}>Players to watch</Text>
+        <Text
+          accessibilityLabel={`${projections.length} projections`}
+          style={styles.count}
+        >
+          {projections.length}
+        </Text>
       </View>
 
       <ScrollView
@@ -48,18 +49,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.md,
   },
-  headingCopy: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  eyebrow: {
-    color: colors.accent,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
   title: {
+    flex: 1,
     color: colors.textPrimary,
     fontSize: 22,
     fontWeight: '800',

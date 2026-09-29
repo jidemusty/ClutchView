@@ -1,5 +1,6 @@
-import { colors, radius, spacing } from '@/theme/token';
 import { StyleSheet, Text, View } from 'react-native';
+
+import { colors, radius, spacing } from '@/theme/token';
 import type { LiveMatchScreenModel } from '../live-match-screen-model';
 
 interface FreshnessIndicatorProps {
@@ -15,13 +16,8 @@ export function FreshnessIndicator({ freshness }: FreshnessIndicatorProps) {
       accessibilityLabel={accessibilityLabel}
       style={styles.container}
     >
-      <View style={styles.status}>
-        <View style={styles.statusDot} />
-        <Text style={styles.statusText}>{freshness.status}</Text>
-      </View>
-
-      <View style={styles.divider} />
-
+      <View style={styles.statusDot} />
+      <Text style={styles.statusText}>{freshness.status}</Text>
       <Text style={styles.detail}>{freshness.detail}</Text>
     </View>
   );
@@ -29,18 +25,7 @@ export function FreshnessIndicator({ freshness }: FreshnessIndicatorProps) {
 
 const styles = StyleSheet.create({
   container: {
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.accentMuted,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.pill,
-  },
-  status: {
+    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
@@ -53,19 +38,12 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: colors.accent,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  divider: {
-    width: 1,
-    height: 12,
-    backgroundColor: colors.border,
   },
   detail: {
     color: colors.textSecondary,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
   },
 });

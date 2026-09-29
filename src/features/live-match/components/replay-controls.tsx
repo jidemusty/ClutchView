@@ -19,10 +19,7 @@ export function ReplayControls({ replay }: ReplayControlsProps) {
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
-        <View style={styles.headingCopy}>
-          <Text style={styles.eyebrow}>Demo tools</Text>
-          <Text style={styles.title}>Match replay</Text>
-        </View>
+        <Text style={styles.title}>Demo replay</Text>
 
         <View style={styles.state}>
           <View style={styles.stateDot} />
@@ -76,18 +73,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.md,
   },
-  headingCopy: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  eyebrow: {
-    color: colors.accent,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
   title: {
+    flex: 1,
     color: colors.textPrimary,
     fontSize: 22,
     fontWeight: '800',
@@ -107,15 +94,14 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 12,
     fontWeight: '700',
-    textTransform: 'uppercase',
   },
   panel: {
     gap: spacing.md,
     padding: spacing.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
   },
   controls: {
     flexDirection: 'row',
@@ -132,13 +118,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.control,
   },
   primaryControl: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   primaryControlText: {
-    color: colors.background,
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: '800',
   },

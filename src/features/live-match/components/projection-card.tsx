@@ -19,7 +19,7 @@ interface StatusPresentation {
 const statusPresentation: Record<ProjectionStatus, StatusPresentation> = {
   active: {
     label: 'In progress',
-    color: colors.accent,
+    color: colors.textSecondary,
     backgroundColor: colors.surfaceElevated,
   },
   approaching: {
@@ -54,13 +54,9 @@ export function ProjectionCard({ projection }: ProjectionCardProps) {
       <View style={styles.metadata}>
         <Text style={styles.team}>{projection.teamAbbreviation}</Text>
 
-        <View
-          style={[styles.status, { backgroundColor: status.backgroundColor }]}
-        >
-          <Text style={[styles.statusText, { color: status.color }]}>
-            {status.label}
-          </Text>
-        </View>
+        <Text style={[styles.statusText, { color: status.color }]}>
+          {status.label}
+        </Text>
       </View>
 
       <View style={styles.player}>
@@ -75,7 +71,6 @@ export function ProjectionCard({ projection }: ProjectionCardProps) {
           {projection.current}
           <Text style={styles.progressTarget}> / {projection.target}</Text>
         </Text>
-        <Text style={styles.progressLabel}>Current</Text>
       </View>
 
       <View
@@ -112,7 +107,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
   },
   reachedCard: {
     borderColor: colors.accent,
@@ -135,9 +130,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   statusText: {
-    fontSize: 11,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontSize: 12,
+    fontWeight: '700',
   },
   player: {
     minHeight: 58,
@@ -157,8 +151,6 @@ const styles = StyleSheet.create({
   progressSummary: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
   },
   progressValue: {
     color: colors.textPrimary,
@@ -170,12 +162,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 16,
     fontWeight: '600',
-  },
-  progressLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
   },
   progressTrack: {
     height: 7,

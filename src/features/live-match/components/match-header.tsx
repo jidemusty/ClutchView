@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderRadius: radius.broadcastPanel,
   },
   matchStatus: {
     flexDirection: 'row',
@@ -50,11 +50,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   period: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    color: colors.textPrimary,
+    fontSize: 13,
+    fontWeight: '700',
   },
   clock: {
     color: colors.textSecondary,
