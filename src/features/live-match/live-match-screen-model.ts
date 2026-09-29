@@ -5,7 +5,7 @@ export type ProjectionStatus = 'active' | 'approaching' | 'reached';
 
 export type TimelineEventEmphasis = 'standard' | 'highlight' | 'critical';
 
-export type ReplayState = 'playing' | 'paused';
+export type ReplayState = 'idle' | 'playing' | 'paused' | 'completed';
 
 export interface TeamDisplay {
   readonly name: string;
