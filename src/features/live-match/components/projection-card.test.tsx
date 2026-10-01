@@ -35,7 +35,7 @@ describe('ProjectionCard', () => {
     );
 
     expect(timing).not.toHaveBeenCalled();
-    expect(getByText('Reached')).toBeTruthy();
+    expect(getByText('HIT')).toBeTruthy();
     expect(getByRole('progressbar')).toHaveAccessibilityValue({
       min: 0,
       max: 2,

@@ -34,7 +34,7 @@ export function ReplayControls({
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
-        <Text style={styles.title}>Demo replay</Text>
+        <Text style={styles.title}>Replay transport</Text>
 
         <View style={styles.state}>
           <View style={styles.stateDot} />
@@ -90,10 +90,6 @@ export function ReplayControls({
             <Text style={styles.speedValue}>{replay.speed}x</Text>
           </Pressable>
         </View>
-
-        <Text style={styles.note}>
-          Replay the same match sequence at 1x, 2x, or 4x speed.
-        </Text>
       </View>
     </View>
   );
@@ -101,18 +97,18 @@ export function ReplayControls({
 
 const styles = StyleSheet.create({
   section: {
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   heading: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.md,
   },
   title: {
     flex: 1,
     color: colors.textPrimary,
-    fontSize: 22,
+    fontSize: 14,
     fontWeight: '800',
   },
   state: {
@@ -132,12 +128,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   panel: {
-    gap: spacing.md,
-    padding: spacing.lg,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
+    paddingVertical: spacing.sm,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.card,
   },
   controls: {
     flexDirection: 'row',
@@ -145,8 +139,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   control: {
-    minWidth: 88,
-    minHeight: 48,
+    minWidth: 82,
+    minHeight: 42,
     flexGrow: 1,
     flexBasis: 0,
     flexDirection: 'row',
@@ -154,22 +148,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
-    borderRadius: radius.control,
+    borderRadius: 0,
   },
   primaryControl: {
-    backgroundColor: colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.textPrimary,
   },
   primaryControlText: {
-    color: colors.textPrimary,
+    color: colors.ink,
     fontSize: 14,
     fontWeight: '800',
   },
   secondaryControl: {
     backgroundColor: colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   secondaryControlText: {
     color: colors.textPrimary,
@@ -177,9 +167,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   speedControl: {
-    backgroundColor: colors.accentMuted,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.surfaceElevated,
   },
   speedLabel: {
     color: colors.textSecondary,
@@ -196,10 +184,5 @@ const styles = StyleSheet.create({
   },
   disabledControl: {
     opacity: 0.4,
-  },
-  note: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    lineHeight: 17,
   },
 });

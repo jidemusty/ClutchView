@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, spacing } from '@/theme/token';
 import type { LiveMatchScreenModel } from '../live-match-screen-model';
@@ -12,9 +12,6 @@ interface ProjectionSectionProps {
   };
 }
 
-const cardWidth = 280;
-const cardGap = spacing.lg;
-
 export function ProjectionSection({
   projections,
   criticalMoment,
@@ -22,22 +19,16 @@ export function ProjectionSection({
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
-        <Text style={styles.title}>Players to watch</Text>
+        <Text style={styles.title}>Watchlist</Text>
         <Text
           accessibilityLabel={`${projections.length} projections`}
           style={styles.count}
         >
-          {projections.length}
+          LIVE PROGRESS / {projections.length}
         </Text>
       </View>
 
-      <ScrollView
-        horizontal
-        contentContainerStyle={styles.cards}
-        decelerationRate="fast"
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={cardWidth + cardGap}
-      >
+      <View style={styles.cards}>
         {projections.map((projection) => (
           <ProjectionCard
             criticalMomentId={
@@ -49,14 +40,14 @@ export function ProjectionSection({
             projection={projection}
           />
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   section: {
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   heading: {
     flexDirection: 'row',
@@ -67,16 +58,17 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     color: colors.textPrimary,
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
   },
   count: {
     color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.8,
   },
   cards: {
-    gap: cardGap,
-    paddingRight: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
 });

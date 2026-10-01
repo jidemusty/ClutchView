@@ -1,5 +1,5 @@
 import { colors, spacing } from '@/theme/token';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EventTimeline } from './components/event-timeline';
 import { FreshnessIndicator } from './components/freshness-indicator';
@@ -29,9 +29,15 @@ export function LiveMatchScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <MatchHeader match={screenModel.match} />
+        <View style={styles.topline}>
+          <View>
+            <Text style={styles.brand}>CLUTCHVIEW</Text>
+            <Text style={styles.context}>NORTH LONDON / MATCH 01</Text>
+          </View>
+          <FreshnessIndicator freshness={screenModel.freshness} />
+        </View>
 
-        <FreshnessIndicator freshness={screenModel.freshness} />
+        <MatchHeader match={screenModel.match} />
 
         <ProjectionSection
           projections={screenModel.projections}
@@ -67,8 +73,28 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    gap: spacing.xl,
+    gap: spacing.xxl,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxxl,
+  },
+  topline: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  brand: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 1.4,
+  },
+  context: {
+    marginTop: spacing.xs,
+    color: colors.textSecondary,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.8,
   },
 });

@@ -2,12 +2,13 @@ import { memo, useEffect, useState } from 'react';
 import {
   AccessibilityInfo,
   Animated,
+  Platform,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
-import { colors, radius, spacing } from '@/theme/token';
+import { colors, spacing } from '@/theme/token';
 import type {
   ProjectionDisplay,
   ProjectionStatus,
@@ -87,12 +88,12 @@ function ProjectionCardComponent({
           Animated.timing(scale, {
             toValue: 1.025,
             duration: 140,
-            useNativeDriver: true,
+            useNativeDriver: Platform.OS !== 'web',
           }),
           Animated.timing(scale, {
             toValue: 1,
             duration: 220,
-            useNativeDriver: true,
+            useNativeDriver: Platform.OS !== 'web',
           }),
         ]);
 
@@ -117,30 +118,28 @@ function ProjectionCardComponent({
   return (
     <Animated.View
       style={[
-        styles.card,
-        projection.status === 'reached' && styles.reachedCard,
+        styles.row,
+        projection.status === 'reached' && styles.reachedRow,
         { transform: [{ scale }] },
       ]}
     >
-      <View style={styles.metadata}>
+      <View style={styles.identity}>
         <Text style={styles.team}>{projection.teamAbbreviation}</Text>
-
-        <Text style={[styles.statusText, { color: status.color }]}>
-          {status.label}
-        </Text>
+        <View style={styles.player}>
+          <Text numberOfLines={1} style={styles.playerName}>
+            {projection.playerName}
+          </Text>
+          <Text style={styles.metric}>{projection.metric}</Text>
+        </View>
       </View>
 
-      <View style={styles.player}>
-        <Text numberOfLines={2} style={styles.playerName}>
-          {projection.playerName}
-        </Text>
-        <Text style={styles.metric}>{projection.metric}</Text>
-      </View>
-
-      <View style={styles.progressSummary}>
+      <View style={styles.valueBlock}>
         <Text style={styles.progressValue}>
           {projection.current}
           <Text style={styles.progressTarget}> / {projection.target}</Text>
+        </Text>
+        <Text style={[styles.statusText, { color: status.color }]}>
+          {projection.status === 'reached' ? 'HIT' : status.label}
         </Text>
       </View>
 
@@ -176,77 +175,75 @@ export const ProjectionCard = memo(
 );
 
 const styles = StyleSheet.create({
-  card: {
-    width: 280,
-    gap: spacing.lg,
-    padding: spacing.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.card,
-  },
-  reachedCard: {
-    borderColor: colors.accent,
-  },
-  metadata: {
+  row: {
+    minHeight: 84,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  reachedRow: {
+    backgroundColor: colors.accentMuted,
+  },
+  identity: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
   },
   team: {
-    color: colors.textSecondary,
-    fontSize: 12,
+    width: 32,
+    color: colors.warning,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  statusText: {
+    fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.8,
   },
-  status: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.pill,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
   player: {
-    minHeight: 58,
+    flex: 1,
+    minWidth: 0,
     gap: spacing.xs,
   },
   playerName: {
     color: colors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
-    lineHeight: 25,
+    fontSize: 14,
+    fontWeight: '800',
   },
   metric: {
     color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: '600',
   },
-  progressSummary: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+  valueBlock: {
+    width: 64,
+    alignItems: 'flex-end',
+    gap: spacing.xs,
   },
   progressValue: {
     color: colors.textPrimary,
-    fontSize: 28,
+    fontSize: 18,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
   },
   progressTarget: {
     color: colors.textSecondary,
-    fontSize: 16,
+    fontSize: 11,
     fontWeight: '600',
   },
   progressTrack: {
-    height: 7,
+    width: 42,
+    height: 3,
     overflow: 'hidden',
     backgroundColor: colors.surfaceElevated,
-    borderRadius: radius.pill,
   },
   progressFill: {
     height: '100%',
-    borderRadius: radius.pill,
   },
 });
