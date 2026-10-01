@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -12,11 +12,6 @@ import type {
   ProjectionDisplay,
   ProjectionStatus,
 } from '../live-match-screen-model';
-
-interface ProjectionCardProps {
-  readonly projection: ProjectionDisplay;
-  readonly criticalMomentId?: string;
-}
 
 interface StatusPresentation {
   readonly label: string;
@@ -42,7 +37,30 @@ const statusPresentation: Record<ProjectionStatus, StatusPresentation> = {
   },
 };
 
-export function ProjectionCard({
+export interface ProjectionCardProps {
+  readonly projection: ProjectionDisplay;
+  readonly criticalMomentId?: string;
+}
+
+export function areProjectionCardPropsEqual(
+  previous: ProjectionCardProps,
+  next: ProjectionCardProps,
+): boolean {
+  return (
+    previous.criticalMomentId === next.criticalMomentId &&
+    previous.projection.id === next.projection.id &&
+    previous.projection.playerId === next.projection.playerId &&
+    previous.projection.stat === next.projection.stat &&
+    previous.projection.playerName === next.projection.playerName &&
+    previous.projection.teamAbbreviation === next.projection.teamAbbreviation &&
+    previous.projection.metric === next.projection.metric &&
+    previous.projection.current === next.projection.current &&
+    previous.projection.target === next.projection.target &&
+    previous.projection.status === next.projection.status
+  );
+}
+
+function ProjectionCardComponent({
   projection,
   criticalMomentId,
 }: ProjectionCardProps) {
@@ -151,6 +169,11 @@ export function ProjectionCard({
     </Animated.View>
   );
 }
+
+export const ProjectionCard = memo(
+  ProjectionCardComponent,
+  areProjectionCardPropsEqual,
+);
 
 const styles = StyleSheet.create({
   card: {
