@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { AccessibilityInfo } from 'react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 
 import type { GoalEvent } from './domain/match-event';
 import { getGoalAnnouncement, notifyGoal } from './critical-event-feedback';
@@ -46,5 +46,16 @@ describe('critical event feedback', () => {
     expect(Haptics.impactAsync).toHaveBeenCalledWith(
       Haptics.ImpactFeedbackStyle.Heavy,
     );
+  });
+
+  it('uses the supported announcement API on web', async () => {
+    jest.replaceProperty(Platform, 'OS', 'web');
+    const announce = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+
+    await notifyGoal(goal);
+
+    expect(announce).toHaveBeenCalledWith(getGoalAnnouncement(goal));
   });
 });

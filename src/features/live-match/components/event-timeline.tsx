@@ -13,24 +13,20 @@ interface EventTimelineProps {
 interface EventPresentation {
   readonly markerColor: string;
   readonly descriptionColor: string;
-  readonly backgroundColor: string;
 }
 
 const eventPresentation: Record<TimelineEventEmphasis, EventPresentation> = {
   standard: {
     markerColor: colors.textSecondary,
     descriptionColor: colors.textSecondary,
-    backgroundColor: 'transparent',
   },
   highlight: {
     markerColor: colors.warning,
     descriptionColor: colors.textPrimary,
-    backgroundColor: 'transparent',
   },
   critical: {
     markerColor: colors.accent,
     descriptionColor: colors.accent,
-    backgroundColor: colors.accentMuted,
   },
 };
 
@@ -38,12 +34,12 @@ export function EventTimeline({ events }: EventTimelineProps) {
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
-        <Text style={styles.title}>Recent moments</Text>
+        <Text style={styles.title}>Match tape</Text>
         <Text
           accessibilityLabel={`${events.length} events`}
           style={styles.count}
         >
-          {events.length}
+          {events.length} SIGNALS
         </Text>
       </View>
 
@@ -65,7 +61,6 @@ export function EventTimeline({ events }: EventTimelineProps) {
               key={event.id}
               style={[
                 styles.event,
-                { backgroundColor: presentation.backgroundColor },
                 event.emphasis === 'critical' && styles.criticalEvent,
                 isLast && styles.lastEvent,
               ]}
@@ -107,7 +102,7 @@ export function EventTimeline({ events }: EventTimelineProps) {
 
 const styles = StyleSheet.create({
   section: {
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   heading: {
     flexDirection: 'row',
@@ -118,17 +113,19 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     color: colors.textPrimary,
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
   },
   count: {
     color: colors.textSecondary,
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.8,
     fontVariant: ['tabular-nums'],
   },
   events: {
-    gap: 0,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   emptyState: {
     paddingVertical: spacing.md,
@@ -137,22 +134,21 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   event: {
-    minHeight: 72,
+    minHeight: 60,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
   timeline: {
-    width: 12,
+    width: 18,
     alignSelf: 'stretch',
     alignItems: 'center',
   },
   marker: {
-    width: 9,
-    height: 9,
+    width: 7,
+    height: 7,
     marginTop: spacing.md,
     borderRadius: radius.pill,
   },
@@ -163,11 +159,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   minute: {
-    width: 44,
-    marginLeft: spacing.sm,
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '700',
+    width: 38,
+    color: colors.textPrimary,
+    fontSize: 12,
+    fontWeight: '800',
     fontVariant: ['tabular-nums'],
   },
   eventCopy: {
@@ -177,16 +172,19 @@ const styles = StyleSheet.create({
   },
   playerName: {
     color: colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '800',
   },
   description: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.7,
   },
   criticalEvent: {
-    marginBottom: spacing.xs,
-    borderRadius: radius.control,
+    borderLeftWidth: 2,
+    borderLeftColor: colors.accent,
+    paddingLeft: spacing.sm,
+    backgroundColor: colors.accentMuted,
   },
   lastEvent: {
     borderBottomWidth: 0,

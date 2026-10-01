@@ -1,56 +1,173 @@
-# Welcome to your Expo app 👋
+# ClutchView
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+ClutchView is a focused second-screen sports experience for tracking player
+projections while a match is in motion. A deterministic event stream drives the
+score, player progress, and match tape while the domain protects the interface
+from duplicate, delayed, disconnected, and out-of-order delivery.
 
-## Get started
+[Read the case study](https://jidemusty.github.io/clutchview/) ·
+[Watch the 3-minute demo](https://www.loom.com/share/809ba321e582446186b57461191662fa) ·
+[Review the architecture](./docs/architecture.md) ·
+[See the performance method](./docs/performance.md)
 
-1. Install dependencies
+## Why this exists
 
-   ```bash
-   npm install
-   ```
+Live sports interfaces have to remain useful when transport conditions are not
+ideal. ClutchView makes that reliability work inspectable:
 
-2. Start the app
+- replay the same typed match fixture at 1x, 2x, or 4x;
+- disconnect while source time continues, then reconcile buffered events;
+- emit duplicates and reversed pairs without corrupting visible state;
+- hold future sequence numbers until missing events arrive;
+- trigger haptic, VoiceOver, and visual goal feedback only after acceptance; and
+- measure projection-row isolation against a deterministic render budget.
 
-   ```bash
-   npx expo start
-   ```
+## Run it
 
-In the output, you'll find options to open the app in a
+Requirements:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+- Node.js 22
+- Yarn Classic 1.22
+- Expo Go, an iOS Simulator, or an Android emulator
 
 ```bash
-npm run reset-project
+git clone https://github.com/jidemusty/ClutchView.git
+cd ClutchView
+yarn install
+yarn start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Use the QR code for Expo Go, press `i` for iOS, `a` for Android, or `w` for web.
 
-### Other setup steps
+`yarn ios` uses a small Device Hub-compatible launcher because Xcode 27 no
+longer ships the standalone Simulator app expected by the current Expo CLI. It
+selects an available Metro port, opens Device Hub, and launches the project in
+the booted simulator.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Product controls
 
-## Learn more
+### Replay transport
 
-To learn more about developing your project with Expo, look at the following resources:
+- **Play / Pause** controls fixture delivery.
+- **Reset** restores the initial match.
+- **Speed** cycles through 1x, 2x, and 4x.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Fault lab
 
-## Join the community
+Expand **Fault lab** to make transport behavior explicit:
 
-Join our community of developers creating universal apps.
+- delay the next event by three seconds;
+- disconnect while the replay continues to buffer events;
+- reconnect and flush buffered events in order;
+- deliver the next event twice; or
+- deliver the next pair in reverse order.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Freshness changes to stale when the visible state is no longer current.
+
+## Architecture
+
+```text
+Timed fixture
+    ↓
+DeterministicReplaySource
+    ├── replay controls
+    ├── transport fault controls
+    └── snapshots
+    ↓
+accepted domain events
+    ↓
+applyMatchEvent
+    ├── duplicate rejection
+    ├── sequence buffering
+    └── ordered reconciliation
+    ↓
+MatchState → presentLiveMatch → React screen model
+```
+
+Transport delivery and domain acceptance are deliberately separate. The UI,
+haptics, announcements, and animations respond to accepted domain events, never
+raw delivery. See [the architecture notes](./docs/architecture.md) for
+boundaries, guarantees, and production tradeoffs.
+
+## Accessibility
+
+- Goal feedback includes heavy impact haptics and queued, high-priority
+  VoiceOver announcements.
+- Duplicate events cannot repeat critical feedback.
+- Reduce Motion is checked immediately before animation; information remains
+  visible and spoken when motion is skipped.
+- Replay and Fault lab controls expose semantic labels and disabled states.
+- The case-study site includes keyboard focus styles, semantic landmarks, and a
+  reduced-motion mode.
+
+## Performance
+
+Across the deterministic four-event fixture:
+
+- baseline projection-card render opportunities: **15**;
+- optimized projection-card renders: **7**;
+- reduction: **53%**.
+
+The documented iPhone 18 Pro simulator run in Expo Go development mode held
+**60 UI FPS and 60 JS FPS** through a complete replay at 4x. This is not
+presented as a production-device benchmark. Reproduce the method in
+[the performance report](./docs/performance.md).
+
+## Validation
+
+```bash
+yarn format:check
+yarn lint
+yarn typecheck
+yarn test
+npx --yes expo-doctor
+```
+
+The validated pre-launch baseline contains 14 suites and 50 tests. Tests cover
+domain reconciliation, replay timing and faults, component behavior, critical
+feedback, accessibility, and the projection render budget.
+
+## Project map
+
+```text
+src/features/live-match/
+├── components/     screen sections and controls
+├── data/replay/    deterministic source and fixture
+├── domain/         typed events and ordered match state
+├── hooks/          React replay coordinator
+├── presentation/   domain-to-screen mapping
+└── live-match-screen.tsx
+
+docs/
+├── index.html       deployable hiring case study
+├── architecture.md  boundaries and guarantees
+├── ai-workflow.md   AI-use disclosure
+├── distribution.md preview and EAS guidance
+└── performance.md   repeatable measurement
+```
+
+## AI-assisted development
+
+AI served as a pair programmer for alternatives, implementation support, test
+ideas, and editing. Product constraints, architecture selection, code review,
+physical-device diagnosis, and final validation remained human-owned. The
+working agreement and guardrails are documented in
+[the AI workflow](./docs/ai-workflow.md).
+
+## Distribution
+
+The recommended reviewer package is the static case study, this repository, and
+a narrated simulator recording. Expo Go is useful for a scheduled live review;
+EAS internal distribution is configured for installable previews.
+
+Read [the distribution guide](./docs/distribution.md) before publishing. A
+signed iOS preview requires Apple Developer Program membership; it is not
+required for the case study, source review, video, or Expo Go during a live
+session.
+
+## Scope
+
+ClutchView is a vertical slice. It intentionally excludes authentication,
+wagering, a production sports feed, persisted reconnect cursors, and
+production-device profiling. Those limits keep the reliability and UI
+decisions small enough to inspect.

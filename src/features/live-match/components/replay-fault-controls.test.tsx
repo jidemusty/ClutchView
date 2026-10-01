@@ -29,6 +29,7 @@ describe('ReplayFaultControls', () => {
       />,
     );
 
+    await fireEvent.press(getByRole('button', { name: 'Show fault lab' }));
     await fireEvent.press(getByRole('button', { name: 'Delay next' }));
     await fireEvent.press(getByRole('button', { name: 'Disconnect' }));
     await fireEvent.press(getByRole('button', { name: 'Duplicate' }));
@@ -53,6 +54,7 @@ describe('ReplayFaultControls', () => {
       />,
     );
 
+    await fireEvent.press(getByRole('button', { name: 'Show fault lab' }));
     await fireEvent.press(getByRole('button', { name: 'Reconnect' }));
 
     expect(onToggleConnection).toHaveBeenCalledTimes(1);

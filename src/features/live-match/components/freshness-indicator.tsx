@@ -14,7 +14,7 @@ const toneColor: Record<FreshnessTone, string> = {
   current: colors.accent,
   neutral: colors.textSecondary,
   warning: colors.warning,
-  offline: '#F06A73',
+  offline: colors.offline,
 };
 
 export function FreshnessIndicator({ freshness }: FreshnessIndicatorProps) {
@@ -38,10 +38,11 @@ export function FreshnessIndicator({ freshness }: FreshnessIndicatorProps) {
 
 const styles = StyleSheet.create({
   container: {
-    alignSelf: 'flex-start',
+    flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'flex-end',
+    gap: spacing.xs,
   },
   statusDot: {
     width: 7,
@@ -49,12 +50,14 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   statusText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '800',
   },
   detail: {
+    flexShrink: 1,
     color: colors.textSecondary,
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '500',
+    textAlign: 'right',
   },
 });
